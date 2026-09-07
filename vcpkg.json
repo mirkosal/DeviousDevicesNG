@@ -1,56 +1,23 @@
 {
     "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
-    "name": "commonlibsse-sample-plugin",
-    "description": "Sample SKSE plugin based on CommonLibSSE, for unified AE/SE/VR deployment.",
-    "homepage": "https://www.skyrimng.com",
-    "license": "Apache-2.0",
-    "features": {
-        "plugin": {
-            "description": "Build the SKSE plugin.",
-            "dependencies": [
-                "commonlibsse-ng",
-                "detours",
-                "boost-algorithm",
-                "boost-math",
-                "boost-lexical-cast",
-                "boost-property-tree"
-            ]
-        },
-        "tests": {
-            "description": "Build tests for the SKSE plugin.",
-            "dependencies": [
-                {
-                    "name": "commonlibsse-sample-plugin",
-                    "default-features": false,
-                    "features": [
-                        "plugin"
-                    ]
-                },
-                "catch2"
-            ]
-        }
-    },
-    "overrides": [
-        {
-            "name": "boost-algorithm",
-            "version": "1.86.0"
-        },
-        {
-            "name": "boost-math",
-            "version": "1.86.0"
-        },
-        {
-            "name": "boost-lexical-cast",
-            "version": "1.86.0"
-        },
-        {
-            "name": "boost-property-tree",
-            "version": "1.86.0"
-        }
-    ],
-    "builtin-baseline": "8cbab05e499a6fc3893c9a6125d51b6d7d877dcc",
-    "default-features": [
-        "plugin",
-        "tests"
+    "name": "deviousdevices-ng",
+    "version-string": "3.0.0.1",
+    "description": "NG implementation of Devious Devices",
+    "builtin-baseline": "ee12231b20c95013c6638d845d04c91559a1d1ff",
+    "dependencies": [
+        "detours",
+        "boost-algorithm",
+        "boost-math",
+        "boost-lexical-cast",
+        "boost-property-tree",
+        "directxmath",
+        "directxtk",
+        "fmt",
+        "nlohmann-json",
+        "rapidcsv",
+        "simpleini",
+        "spdlog",
+        "toml11",
+        "xbyak"
     ]
 }
