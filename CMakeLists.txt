@@ -101,8 +101,7 @@ set(COMMONLIB_ENABLE_IPO OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
         CommonLibSSE_NG
         GIT_REPOSITORY https://github.com/alandtse/CommonLibSSE-NG.git
-        GIT_TAG v7.3.0
-        GIT_SHALLOW TRUE)
+        GIT_TAG da9ca709e91400981608335233811399a13ff74b)
 FetchContent_MakeAvailable(CommonLibSSE_NG)
 include("${commonlibsse_ng_SOURCE_DIR}/cmake/CommonLibSSE.cmake")
 
