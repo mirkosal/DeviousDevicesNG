@@ -1,0 +1,47 @@
+name: Build Skyrim 1.7.104 compatibility DLL
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - ".github/workflows/build-compat-1.7.104.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - name: Checkout compatibility branch
+        uses: actions/checkout@v4
+        with:
+          ref: compat/skyrim-1.7.104
+
+      - name: Install CMake
+        uses: lukka/get-cmake@latest
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+
+      - name: Configure and build
+        uses: lukka/run-cmake@v10
+        with:
+          cmakeListsTxtPath: '${{ github.workspace }}/CMakeLists.txt'
+          configurePreset: build-release-msvc
+          configurePresetAdditionalArgs: "['-DCMAKE_TOOLCHAIN_FILE:STRING=C:/vcpkg/scripts/buildsystems/vcpkg.cmake']"
+          buildPreset: release-msvc
+
+      - name: Collect DLL
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifact | Out-Null
+          Copy-Item build/release-msvc/DeviousDevices.dll artifact/DeviousDevices.dll
+          if (Test-Path build/release-msvc/DeviousDevices.pdb) {
+            Copy-Item build/release-msvc/DeviousDevices.pdb artifact/DeviousDevices.pdb
+          }
+
+      - name: Upload DLL artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DeviousDevices-1.7.104-test
+          path: artifact
+          retention-days: 30
