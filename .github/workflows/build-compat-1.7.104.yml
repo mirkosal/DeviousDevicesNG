@@ -5,16 +5,21 @@ on:
     branches: [ "main" ]
     paths:
       - ".github/workflows/build-compat-1.7.104.yml"
+      - "CMakeLists.txt"
+      - "CMakePresets.json"
+      - "vcpkg.json"
+      - "vcpkg-configuration.json"
+      - "include/**"
+      - "src/**"
+      - "cmake/**"
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-2022
     steps:
-      - name: Checkout compatibility branch
+      - name: Checkout main
         uses: actions/checkout@v4
-        with:
-          ref: compat/skyrim-1.7.104
 
       - name: Install CMake
         uses: lukka/get-cmake@latest
@@ -30,18 +35,16 @@ jobs:
           configurePresetAdditionalArgs: "['-DCMAKE_TOOLCHAIN_FILE:STRING=C:/vcpkg/scripts/buildsystems/vcpkg.cmake']"
           buildPreset: release-msvc
 
-      - name: Collect DLL
+      - name: Collect Vortex-ready DLL
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path artifact | Out-Null
-          Copy-Item build/release-msvc/DeviousDevices.dll artifact/DeviousDevices.dll
-          if (Test-Path build/release-msvc/DeviousDevices.pdb) {
-            Copy-Item build/release-msvc/DeviousDevices.pdb artifact/DeviousDevices.pdb
-          }
+          New-Item -ItemType Directory -Force -Path artifact/SKSE/Plugins | Out-Null
+          Copy-Item build/release-msvc/DeviousDevices.dll artifact/SKSE/Plugins/DeviousDevices.dll
 
-      - name: Upload DLL artifact
+      - name: Upload Vortex-ready test artifact
         uses: actions/upload-artifact@v4
         with:
-          name: DeviousDevices-1.7.104-test
+          name: DDNG-Skyrim-1.7.104-Test
           path: artifact
+          if-no-files-found: error
           retention-days: 30
