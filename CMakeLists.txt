@@ -16,6 +16,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
 
 include(GNUInstallDirs)
+include(FetchContent)
 
 configure_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.rc.in
@@ -85,7 +86,26 @@ message("\tTests: ${BUILD_TESTS}")
 ########################################################################################################################
 ## Configure target DLL
 ########################################################################################################################
-find_package(CommonLibSSE CONFIG REQUIRED)
+# Devious Devices NG previously consumed commonlibsse-ng from the ColorGlass vcpkg registry.
+# That registry's port is too old for Skyrim 1.7.x / Address Library format 5, which causes
+# REL/Relocation.h: failed to open address library file at runtime. Build a modern CommonLibSSE-NG
+# directly from source instead. 6.7.0 introduced Address Library format 5 compatibility; 7.3.0
+# also contains the subsequent AE 1.7.99+ layout fixes.
+set(ENABLE_SKYRIM_SE OFF CACHE BOOL "" FORCE)
+set(ENABLE_SKYRIM_AE ON CACHE BOOL "" FORCE)
+set(ENABLE_SKYRIM_VR OFF CACHE BOOL "" FORCE)
+set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(SKSE_SUPPORT_XBYAK ON CACHE BOOL "" FORCE)
+set(COMMONLIB_ENABLE_IPO OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+        CommonLibSSE_NG
+        GIT_REPOSITORY https://github.com/alandtse/CommonLibSSE-NG.git
+        GIT_TAG v7.3.0
+        GIT_SHALLOW TRUE)
+FetchContent_MakeAvailable(CommonLibSSE_NG)
+include("${commonlibsse_ng_SOURCE_DIR}/cmake/CommonLibSSE.cmake")
+
 find_library(Detours_LIBRARIES NAMES detours.lib)
 
 add_commonlibsse_plugin(${PROJECT_NAME} SOURCES ${headers} ${sources})
@@ -116,8 +136,6 @@ install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include"
 install(TARGETS ${PROJECT_NAME}
         DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 
-
-set(SKSE_USE_XBYAK ON)
 ########################################################################################################################
 ## Configure unit tests
 ########################################################################################################################
@@ -132,8 +150,7 @@ if(BUILD_TESTS)
             ${headers}
             ${tests} "test/DeviousDevices.cpp")
 
-    target_link_libraries(
-            ${PROJECT_NAME}Tests
+    target_link_libraries(${PROJECT_NAME}Tests
             PRIVATE
             ${PROJECT_NAME}
             Catch2::Catch2WithMain)
