@@ -14,12 +14,62 @@ on:
       - "cmake/**"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-2022
     steps:
       - name: Checkout main
         uses: actions/checkout@v4
+
+      - name: Apply CommonLib 7.3 compatibility source fixes
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          function Replace-InFile([string]$Path, [string]$Old, [string]$New) {
+              $content = Get-Content -Path $Path -Raw
+              if ($content.Contains($Old)) {
+                  $content = $content.Replace($Old, $New)
+                  Set-Content -Path $Path -Value $content -NoNewline
+                  Write-Host "Patched $Path"
+              }
+          }
+
+          Replace-InFile "include/UI.h" `
+              'void Run(RE::IMessageBoxCallback::Message message) override {' `
+              'void Run(std::uint8_t a_button) override {'
+          Replace-InFile "include/UI.h" `
+              '_callback(static_cast<unsigned int>(message));' `
+              '_callback(static_cast<unsigned int>(a_button));'
+          Replace-InFile "include/UI.h" `
+              'messagebox->QueueMessage();' `
+              'RE::MessageBoxMenu::QueueMessage(messagebox);'
+
+          Replace-InFile "src/InventoryFilter.cpp" `
+              'RE::DebugNotification(' `
+              'RE::SendHUDMessage::ShowHUDMessage('
+          Replace-InFile "src/InventoryFilter.cpp" `
+              '(int)loc_armor->GetSlotMask()' `
+              'static_cast<int>(loc_armor->GetSlotMask().underlying())'
+
+          Replace-InFile "src/LibFunctions.cpp" `
+              '(int)loc_armor->GetSlotMask()' `
+              'static_cast<int>(loc_armor->GetSlotMask().underlying())'
+
+          git diff --check
+          $changes = git status --porcelain -- include/UI.h src/InventoryFilter.cpp src/LibFunctions.cpp
+          if ($changes) {
+              git config user.name "github-actions[bot]"
+              git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+              git add include/UI.h src/InventoryFilter.cpp src/LibFunctions.cpp
+              git commit -m "Update DDNG sources for CommonLibSSE-NG 7.3 APIs"
+              git push origin HEAD:main
+          } else {
+              Write-Host "Compatibility source fixes are already present."
+          }
 
       - name: Install CMake
         uses: lukka/get-cmake@latest
